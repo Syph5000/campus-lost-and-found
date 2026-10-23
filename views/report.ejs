@@ -1,0 +1,137 @@
+<%- include('header', { title: heading }) %>
+<%- include('navbar', { active: editing ? '' : 'report' }) %>
+
+    <main class="recent-section">
+        <div class="section-heading">
+            <div>
+                <p class="section-eyebrow">HELP YOUR CAMPUS COMMUNITY</p>
+                <h2><%= heading %></h2>
+                <p class="section-description">
+                    <%= intro %>
+                </p>
+            </div>
+        </div>
+
+        <form
+            action="<%= action %>"
+            method="POST"
+            enctype="multipart/form-data"
+            class="form-card"
+            id="report-form"
+            novalidate
+        >
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <%- include('form-errors', { error, cls: 'alert alert-error' }) %>
+
+            <div class="field">
+                <label for="item_type">Report Type</label>
+                <% const typeValue = editing ? lockedType : form.item_type; %>
+                <select id="item_type" name="item_type" <%= editing ? 'disabled' : 'required' %>>
+                    <option value="">Select report type</option>
+                    <option value="lost" <%= typeValue === 'lost' ? 'selected' : '' %>>I lost an item</option>
+                    <option value="found" <%= typeValue === 'found' ? 'selected' : '' %>>I found an item</option>
+                </select>
+                <% if (editing) { %>
+                    <p class="hint">The report type cannot be changed after submitting.</p>
+                <% } %>
+            </div>
+
+            <div class="field">
+                <label for="title">Item Name</label>
+                <input
+                    type="text"
+                    id="title"
+                    name="title"
+                    placeholder="e.g. Black wallet"
+                    minlength="3" maxlength="150"
+                    value="<%= form.title || '' %>"
+                    required
+                >
+            </div>
+
+            <div class="field">
+                <label for="description">Description</label>
+                <textarea
+                    id="description"
+                    name="description"
+                    placeholder="Describe the item and any identifying details"
+                    rows="4"
+                    minlength="10" maxlength="2000"
+                    required
+                ><%= form.description || '' %></textarea>
+            </div>
+
+            <div class="field">
+                <label for="category">Category</label>
+                <select id="category" name="category" required>
+                    <option value="">Select category</option>
+                    <% categories.forEach(category => { %>
+                        <option value="<%= category %>" <%= form.category === category ? 'selected' : '' %>>
+                            <%= category %>
+                        </option>
+                    <% }); %>
+                </select>
+            </div>
+
+            <div class="field">
+                <label for="location">Location</label>
+                <input
+                    type="text"
+                    id="location"
+                    name="location"
+                    placeholder="Where was it lost or found?"
+                    minlength="3" maxlength="255"
+                    value="<%= form.location || '' %>"
+                    required
+                >
+            </div>
+
+            <div class="field">
+                <label for="date_lost_found">Date Lost or Found</label>
+                <input
+                    type="date"
+                    id="date_lost_found"
+                    name="date_lost_found"
+                    value="<%= form.date_lost_found || '' %>"
+                    required
+                >
+            </div>
+
+            <div class="field">
+                <label for="image"><%= editing && currentImage ? 'Replace photo (optional)' : 'Photo (optional)' %></label>
+                <% if (editing && currentImage) { %>
+                    <div class="upload-preview">
+                        <img src="/<%= String(currentImage).replace(/^\/+/, '') %>" alt="Current photo">
+                        <label class="hint">
+                            <input type="checkbox" name="remove_image" value="1">
+                            Remove the current photo
+                        </label>
+                    </div>
+                <% } %>
+                <input
+                    type="file"
+                    id="image"
+                    name="image"
+                    accept="image/jpeg,image/png,image/webp,image/gif"
+                >
+                <p class="hint">JPG, PNG, WEBP or GIF, up to 5 MB.</p>
+                <p class="field-error" id="image-error" role="alert" hidden></p>
+                <div class="upload-preview" id="image-preview" hidden>
+                    <img src="" alt="Selected photo preview">
+                    <button type="button" id="image-clear" class="btn btn-secondary">Remove photo</button>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">
+                    <%= submitLabel %>
+                </button>
+                <a href="<%= cancelHref %>" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </main>
+
+<%- include('footer') %>
+<script src="/js/script.js"></script>
+</body>
+</html>
