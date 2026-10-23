@@ -85,3 +85,48 @@ exports.submit = async (req, res) => {
         res.fail(500, 'Unable to submit your claim.');
     }
 };
+
+function reviewHandler(decision) {
+    return async (req, res) => {
+        if (!isValidId(req.params.id)) return res.fail(404, 'Claim not found.');
+
+        try {
+            const user = req.session.user;
+            // Claims are verified by administrators only, not by the reporter
+            const result = await claimModel.review(
+                req.params.id,
+                decision,
+                () => isAdmin(user)
+            );
+
+            if (result.outcome === 'not_found') return res.fail(404, 'Claim not found.');
+
+            if (result.outcome === 'forbidden') {
+                return res.fail(403, 'Only an administrator can review claims.');
+            }
+
+            if (result.outcome === 'closed') {
+                req.session.flash = {
+                    type: 'error',
+                    message: 'This claim can no longer be changed.'
+                };
+                return res.redirect(`/items/${result.itemId}`);
+            }
+
+            req.session.flash = {
+                type: 'success',
+                message:
+                    decision === 'approve'
+                        ? 'Claim approved. The claimant can now see how to contact the reporter.'
+                        : 'Claim rejected.'
+            };
+            res.redirect(`/items/${result.itemId}`);
+        } catch (error) {
+            console.error('Review claim error:', error);
+            res.fail(500, 'Unable to update this claim.');
+        }
+    };
+}
+
+exports.approve = reviewHandler('approve');
+exports.reject = reviewHandler('reject');
