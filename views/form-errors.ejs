@@ -1,0 +1,14 @@
+<%# Shows one error, or a bulleted list when there are several. error may be a string or an array. cls = CSS class %>
+<% const errorList = [].concat(error || []).filter(Boolean); %>
+<% if (errorList.length === 1) { %>
+    <div class="<%= cls %>" role="alert"><%= errorList[0] %></div>
+<% } else if (errorList.length > 1) { %>
+    <div class="<%= cls %>" role="alert">
+        <strong>Please fix the following:</strong>
+        <ul class="error-list">
+            <% errorList.forEach(message => { %>
+                <li><%= message %></li>
+            <% }); %>
+        </ul>
+    </div>
+<% } %>
