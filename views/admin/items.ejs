@@ -1,0 +1,70 @@
+<%- include('../header', { title }) %>
+<%- include('../navbar', { active: 'admin' }) %>
+
+    <main class="recent-section">
+        <div class="section-heading">
+            <div>
+                <p class="section-eyebrow">ADMINISTRATION</p>
+                <h2>Manage Reports</h2>
+                <p class="section-description">Every report on the system. Open one to edit, mark returned or delete it.</p>
+            </div>
+        </div>
+
+        <%- include('_nav', { adminTab }) %>
+
+        <form action="/admin/items" method="GET" class="search-form admin-filter">
+            <input type="text" name="search" value="<%= search %>" placeholder="Search by item or reporter">
+            <select name="status">
+                <option value="">All statuses</option>
+                <% ['lost', 'found', 'claimed', 'returned'].forEach(s => { %>
+                    <option value="<%= s %>" <%= status === s ? 'selected' : '' %>><%= s.charAt(0).toUpperCase() + s.slice(1) %></option>
+                <% }); %>
+            </select>
+            <button type="submit" class="btn btn-primary">Filter</button>
+        </form>
+
+        <% if (items.length > 0) { %>
+            <div class="admin-table-wrap">
+                <table class="admin-table">
+                    <thead><tr><th>Item</th><th>Reporter</th><th>Status</th><th>Pending claims</th><th>Reported</th><th></th></tr></thead>
+                    <tbody>
+                        <% items.forEach(item => { const badge = itemBadge(item); %>
+                            <tr>
+                                <td><a href="/items/<%= item.id %>"><%= item.title %></a></td>
+                                <td><%= item.reporter_name || '—' %></td>
+                                <td><span class="status-badge <%= badge.cls %>"><%= badge.label %></span></td>
+                                <td><%= item.pending_claims %></td>
+                                <td><%= formatDate(item.created_at) %></td>
+                                <td class="admin-row-actions">
+                                    <a href="/items/<%= item.id %>">Open</a>
+                                    <% if (item.status === 'lost' || item.status === 'found') { %>
+                                        <a href="/items/<%= item.id %>/edit">Edit</a>
+                                    <% } %>
+                                    <% if (item.status === 'claimed' || item.status === 'returned') { %>
+                                        <form
+                                            method="POST"
+                                            action="/items/<%= item.id %>/delete"
+                                            onsubmit="return confirm('Delete this confirmed report permanently?');"
+                                        >
+                                            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                                            <button type="submit" class="btn btn-danger btn-small">Delete</button>
+                                        </form>
+                                    <% } %>
+                                </td>
+                            </tr>
+                        <% }); %>
+                    </tbody>
+                </table>
+            </div>
+            <p class="hint">Showing up to 200 reports. A report can be deleted only after it is claimed or returned.</p>
+        <% } else { %>
+            <div class="empty-state">
+                <div class="empty-icon">📦</div>
+                <h3>No reports match</h3>
+            </div>
+        <% } %>
+    </main>
+
+<%- include('../footer') %>
+</body>
+</html>

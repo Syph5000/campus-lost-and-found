@@ -1,0 +1,53 @@
+<%- include('../header', { title }) %>
+<%- include('../navbar', { active: 'admin' }) %>
+
+    <main class="recent-section">
+        <div class="section-heading">
+            <div>
+                <p class="section-eyebrow">ADMINISTRATION</p>
+                <h2>Manage Users</h2>
+                <p class="section-description">Promote a student to administrator or change them back. Changes apply immediately.</p>
+            </div>
+        </div>
+
+        <%- include('_nav', { adminTab }) %>
+
+        <div class="admin-table-wrap">
+            <table class="admin-table">
+                <thead><tr><th>Name</th><th>Student ID</th><th>Email</th><th>Reports</th><th>Claims</th><th>Role</th><th></th></tr></thead>
+                <tbody>
+                    <% users.forEach(u => { %>
+                        <tr>
+                            <td><%= u.full_name %></td>
+                            <td><%= u.student_id || '—' %></td>
+                            <td><%= u.email %></td>
+                            <td><%= u.report_count %></td>
+                            <td><%= u.claim_count %></td>
+                            <td><span class="role-pill <%= u.role %>"><%= u.role %></span></td>
+                            <td class="admin-row-actions">
+                                <% if (u.id === currentUser.id) { %>
+                                    <span class="hint">You</span>
+                                <% } else { %>
+                                    <form
+                                        method="POST"
+                                        action="/admin/users/<%= u.id %>/role"
+                                        onsubmit="return confirm('Change the role of this user?');"
+                                    >
+                                        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                                        <input type="hidden" name="role" value="<%= u.role === 'admin' ? 'student' : 'admin' %>">
+                                        <button type="submit" class="btn btn-secondary btn-small">
+                                            <%= u.role === 'admin' ? 'Make student' : 'Make admin' %>
+                                        </button>
+                                    </form>
+                                <% } %>
+                            </td>
+                        </tr>
+                    <% }); %>
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+<%- include('../footer') %>
+</body>
+</html>
