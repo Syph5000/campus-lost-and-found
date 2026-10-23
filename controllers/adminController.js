@@ -40,3 +40,50 @@ exports.items = async (req, res) => {
         res.fail(500, 'Unable to load reports.');
     }
 };
+
+exports.users = async (req, res) => {
+    try {
+        const users = await userModel.listWithActivity();
+
+        res.render('admin/users', {
+            title: 'Manage Users',
+            adminTab: 'users',
+            users
+        });
+    } catch (error) {
+        console.error('Admin users error:', error);
+        res.fail(500, 'Unable to load users.');
+    }
+};
+
+exports.changeRole = async (req, res) => {
+    try {
+        if (!isValidId(req.params.id)) return res.fail(404, 'User not found.');
+
+        const role = (req.body || {}).role;
+
+        if (!['student', 'admin'].includes(role)) {
+            return res.fail(400, 'Invalid role.');
+        }
+
+        // Stops an admin locking themselves out (and the last admin vanishing)
+        if (Number(req.params.id) === req.session.user.id) {
+            req.session.flash = { type: 'error', message: 'You cannot change your own role.' };
+            return res.redirect('/admin/users');
+        }
+
+        const target = await userModel.findById(req.params.id);
+        if (!target) return res.fail(404, 'User not found.');
+
+        await userModel.setRole(target.id, role);
+
+        req.session.flash = {
+            type: 'success',
+            message: `${target.full_name} is now ${role === 'admin' ? 'an administrator' : 'a student'}.`
+        };
+        res.redirect('/admin/users');
+    } catch (error) {
+        console.error('Change role error:', error);
+        res.fail(500, 'Unable to change this role.');
+    }
+};
