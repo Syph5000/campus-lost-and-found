@@ -22,3 +22,33 @@ You need one student account and one admin account (see README.md, step 4).
 Roles: `student` (report, edit own open report, submit claim tickets) and `admin`
 (everything a student can, plus the admin area: reports, claim tickets, users).
 
+## 7. Input validation and data handling
+
+All rules live in one file, `utils/validators.js`, and run on the **server**
+before anything is stored (the HTML attributes such as `maxlength` are only a
+convenience for the user). Every form shows **all** problems at once with a specific message.
+
+| Data | Checks | Example message |
+|---|---|---|
+| Full name | required, 2-100 chars, letters/spaces/`'`/`.`/`-` only | "Full name may only contain letters, spaces, apostrophes, periods and hyphens." |
+| Student ID | required, 3-30 chars, letters/numbers/hyphens | "Student ID may only contain letters, numbers and hyphens (for example 2021-00123)." |
+| Email | required, format, max 100, stored lowercase | "Please enter a valid email address, like name@example.com." |
+| Password | required, 8-72 chars (bcrypt limit), at least one letter and one number, must match confirmation | "Password must contain at least one letter and one number." |
+| Duplicates | email and student ID checked separately, plus the database `UNIQUE` keys as a backstop for simultaneous sign-ups | "That email address is already registered." |
+| Login | email format, password present, generic failure message, lockout | "Invalid email or password." |
+| Report: type | must be `lost` or `found` | "Please choose whether you lost or found the item." |
+| Report: item name | required, 3-150 chars, whitespace-only = empty | "Item name must be 150 characters or fewer." |
+| Report: description | required, 10-2000 chars | "Description must be at least 10 characters." |
+| Report: category | must be one of the fixed list | "That category is not valid." |
+| Report: location | required, 3-255 chars | "Location is required." |
+| Report: date | real calendar date (rejects 2026-02-31), not in the future, not more than 2 years old | "Date cannot be in the future." |
+| Photo | JPG/PNG/WEBP/GIF only, max 5 MB, real file signature checked (not just the extension) | "Only JPG, PNG, WEBP or GIF images are allowed." |
+| Claim message | required, 10-1000 chars | "Your proof of ownership must be at least 10 characters." |
+| URL ids, role values, filters, search text | numeric ids only (else 404), role must be `student`/`admin`, status filters whitelisted, search capped at 100 chars | "Invalid role." |
+| Request size | forms limited to 20 KB | "The information you sent was too large." |
+
+Safe data handling:
+- **SQL injection:** every query is parameterized (`?` placeholders) and lives in `models/`.
+- **XSS:** all output is escaped by EJS (`<%= %>`), so a title like `<script>alert(1)</script>` is shown as text.
+- **Uploads:** random file names, type and signature checks, and removal of the file if the form is rejected.
+- **Passwords:** stored only as bcrypt hashes, never shown or re-filled into a form.
