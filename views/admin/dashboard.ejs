@@ -1,0 +1,54 @@
+<%- include('../header', { title }) %>
+<%- include('../navbar', { active: 'admin' }) %>
+
+    <main class="recent-section">
+        <div class="section-heading">
+            <div>
+                <p class="section-eyebrow">ADMINISTRATION</p>
+                <h2>Admin Dashboard</h2>
+                <p class="section-description">An overview of everything on the system.</p>
+            </div>
+        </div>
+
+        <%- include('_nav', { adminTab }) %>
+
+        <section class="admin-stats">
+            <div class="admin-stat"><strong><%= userCount %></strong><span>Users</span></div>
+            <div class="admin-stat"><strong><%= itemStats.total %></strong><span>Reports</span></div>
+            <div class="admin-stat"><strong><%= itemStats.lost + itemStats.found %></strong><span>Open reports</span></div>
+            <div class="admin-stat"><strong><%= itemStats.claimed %></strong><span>Claimed</span></div>
+            <div class="admin-stat"><strong><%= itemStats.returned %></strong><span>Returned</span></div>
+        </section>
+
+        <section class="page-section">
+            <div class="section-heading">
+                <div><h2>Latest reports</h2></div>
+                <a href="/admin/items" class="view-all">All reports <span>→</span></a>
+            </div>
+
+            <% if (recentItems.length > 0) { %>
+                <div class="admin-table-wrap">
+                    <table class="admin-table">
+                        <thead><tr><th>Item</th><th>Reporter</th><th>Status</th><th>Date</th></tr></thead>
+                        <tbody>
+                            <% recentItems.forEach(item => { const badge = itemBadge(item); %>
+                                <tr>
+                                    <td><a href="/items/<%= item.id %>"><%= item.title %></a></td>
+                                    <td><%= item.reporter_name || '—' %></td>
+                                    <td><span class="status-badge <%= badge.cls %>"><%= badge.label %></span></td>
+                                    <td><%= formatDate(item.created_at) %></td>
+                                </tr>
+                            <% }); %>
+                        </tbody>
+                    </table>
+                </div>
+            <% } else { %>
+                <p class="hint">No reports yet.</p>
+            <% } %>
+        </section>
+
+    </main>
+
+<%- include('../footer') %>
+</body>
+</html>
